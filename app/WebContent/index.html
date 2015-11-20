@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>bdGeoApp</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Trabalho prático de Banco de Dados Geográficos">
+    <meta name="author" content="Lucas Silvestre">
+
+    <!-- Le styles -->
+    <link href="../assets/css/bootstrap.css" rel="stylesheet">
+    <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+    </style>
+    <link href="../assets/css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="../assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+    
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="../assets/dist/leaflet.css" />
+	<!--[if lte IE 8]>
+	    <link rel="stylesheet" href="../assets/dist/leaflet.ie.css" />
+	<![endif]-->
+	
+	<script src="../assets/dist/leaflet.js"></script>
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="index.html">bdGeoApp</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="#">Home</a></li>
+              <li><a href="about.html">About</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <!-- Main hero unit for a primary marketing message or call to action -->
+      <div class="hero-unit" style="padding: 20px;">
+        <div id="map" style="height: 400px"></div>
+      </div>
+
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="span4">
+          <h2>Onde estou?</h2>
+           <p>Veja aqui sua localização atual.</p>
+          <p><a class="btn" href="#" onclick="actual();">Buscar &raquo;</a></p>
+        </div>
+        <div class="span4">
+          <h2>WMS</h2>
+           <p>Acrescenta uma camada via requisição WMS.</p>
+          <p><a class="btn" href="#" onclick="getWMS();">Carregar &raquo;</a></p>
+        </div>
+        <div class="span4">
+          <h2>Locais salvos</h2>
+          <p>Veja todos os locais salvos no banco.</p>
+          <p><a id="json" class="btn" href="#" onclick="getAll();">Ver &raquo;</a></p>
+        </div>
+      </div>
+
+      <hr>
+
+      <footer>
+        <p>&copy; Company 2012</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../assets/js/jquery.js"></script>
+    <script src="../assets/js/bootstrap-transition.js"></script>
+    <script src="../assets/js/bootstrap-alert.js"></script>
+    <script src="../assets/js/bootstrap-modal.js"></script>
+    <script src="../assets/js/bootstrap-dropdown.js"></script>
+    <script src="../assets/js/bootstrap-scrollspy.js"></script>
+    <script src="../assets/js/bootstrap-tab.js"></script>
+    <script src="../assets/js/bootstrap-tooltip.js"></script>
+    <script src="../assets/js/bootstrap-popover.js"></script>
+    <script src="../assets/js/bootstrap-button.js"></script>
+    <script src="../assets/js/bootstrap-collapse.js"></script>
+    <script src="../assets/js/bootstrap-carousel.js"></script>
+    <script src="../assets/js/bootstrap-typeahead.js"></script>
+    
+    
+	<script>
+		
+		var map = new L.Map('map');
+	
+		var cloudmadeUrl = 'http://{s}.tile.cloudmade.com/28390655b371487695b7afccb1652114/997/256/{z}/{x}/{y}.png',
+		    cloudmadeAttribution = 'Map data © 2011 OpenStreetMap contributors, Imagery © 2011 CloudMade',
+		    cloudmade = new L.TileLayer(cloudmadeUrl, {maxZoom: 18, attribution: cloudmadeAttribution});
+
+
+		function geo_success(position) {
+		    // alert(position.coords.latitude + " " + position.coords.longitude);
+		    var latlng = new L.LatLng(position.coords.latitude, position.coords.longitude);
+			map.setView(latlng, 16).addLayer(cloudmade);
+			
+			var marker = new L.Marker(latlng);
+			map.addLayer(marker);
+			marker.bindPopup("Você está aqui!").openPopup();
+
+		}
+		
+		function getWMS() {
+			var nexrad = new L.TileLayer.WMS("http://greenwich.lbd.dcc.ufmg.br:8080/geoserver/BH/wms", {
+			    layers: 'BH:edifpub',
+			    transparent: true,
+			    format: 'image/png',
+			    attribution: "greenwich.lbd.dcc.ufmg.br"
+			});
+			
+			var asd = map.addLayer(nexrad);
+		}
+		
+		/*
+		map.on('click', function(e) {
+			var latlng = String(e.latlng);
+			var aux = latlng.replace("LatLng(", "").replace(")", "").split(",");
+			
+			var latitude = aux[0];
+			var longitude = aux[1];
+			
+			$.post("http://localhost:8080/bdGeoService/service/add/location", { "latitude": latitude, "longitude": longitude },
+					function(data){
+						alert("Salvo!");
+					}, 
+					"json");
+		});
+		*/
+		
+		function actual() {
+			navigator.geolocation.getCurrentPosition(geo_success, geo_error, {maximumAge:600});
+		}
+		
+		function getClose() {
+			$.ajax({
+				type: 'POST',
+				url: 'http://localhost:8080/bdGeoService/service/getClose',
+				data: "latitude= -43.92355" + '' + "&longitude= -19.90352" + '',
+				dataType: "text",
+				success: function (data) {
+					alert(data);
+					eval(data);
+					var geojsonLayer = new L.GeoJSON();
+					map.addLayer(geojsonLayer);
+					geojsonLayer.addGeoJSON(val);
+				},
+				
+				error: function (xhr, ajaxOptions, thrownError) {
+				  alert('error: ' + thrownError);
+				}
+			});
+		}
+		 
+		function getAll() {
+			$.ajax({
+				type: 'GET',
+				url: 'http://localhost:8080/bdGeoService/service/getAll',
+				dataType: "text",
+				success: function (data) {
+					//alert(data);
+					eval(data);
+					var geojsonLayer = new L.GeoJSON();
+					map.addLayer(geojsonLayer);
+					geojsonLayer.addGeoJSON(val);
+				},
+				
+				error: function (xhr, ajaxOptions, thrownError) {
+				  alert('error: ' + thrownError);
+				}
+			});
+		}
+		 
+		// The PositionError object returned
+		function geo_error(err) {
+		    if (err.code == 1) {
+		    	alert('The user denied the request for location information.')
+		    } else if (err.code == 2) {
+		    	alert('Your location information is unavailable.')
+		    } else if (err.code == 3) {
+		    	alert('The request to get your location timed out.')
+		    } else {
+		    	alert('An unknown error occurred while requesting your location.')
+		    }
+		}
+		
+		$(document).ready(function () {
+	        // Test for presence of geolocation
+	        if (navigator && navigator.geolocation) {
+	            navigator.geolocation.getCurrentPosition(geo_success, geo_error, {maximumAge:600});
+	        } else {
+	        	alert('Geolocation is not supported.');
+	        }
+	    });
+	</script>
+
+  </body>
+</html>
